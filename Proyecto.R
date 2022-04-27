@@ -3,22 +3,38 @@ pacman::p_load(mclust, e1071, cluster, flexclust, factoextra, magrittr,dbscan, t
 
 set.seed(43)
 
-data  <- read_rds("beats.rds") %>%
-  filter(!(is.na(data) | is.na(data))) %>% 
-  as_tibble()
+data  <- read_rds("beats.rds") 
+
 
 data2 <- sample(1:nrow(data),1000, replace=FALSE)
-data2 <- data[data2,]
-data2 %>% glimpse()
+data3 <- data[data2,]
+data3 %>% glimpse()
 
 
 data_clean <- data3%>%
 
-filter(!(is.na(danceability) | is.na(energy))) %>%
-  
 select(danceability,energy,loudness,mode,speechiness,acousticness,liveness,valence,time_signature,track_number)
 
 data_clean %>% glimpse()
+
+validar=0
+i=1
+song <- readline(prompt = "Ingrese el nombre de la canción: ")
+while(validar!=1){
+  for (i in 1:nrow(data3)) {
+    if(song==data3[i,27]) {
+      validar=1
+      indice=i
+      cat("La canción",song,"está en la base de datos :D")
+      break
+    }
+  }
+  if(validar==0){
+    song <- readline(prompt = "Por favor ingrese una canción que esté en la base: ")
+  }
+}
+
+
 
 data_PCAproy <- data_clean %>% 
   prcomp(scale. = TRUE) %>% 
@@ -41,11 +57,11 @@ ggplot(data_tsne, aes(V1, V2)) +
 
 # visualizo grafico de kNN
 kNNdistplot(data_tsne, k = 4)
-abline(h=1.7, col = "red", lty = 2)
+abline(h=2, col = "red", lty = 2)
 dev.off() 
 
 # hago un DBScan con parametro observado
-modelo_dbscan <- dbscan(data_tsne, eps = 1.7, minPts = 5)
+modelo_dbscan <- dbscan(data_tsne, eps = 2, minPts = 9)
 
 #visualizo
 ggplot(data_tsne, aes(V1, V2, col = factor(modelo_dbscan$cluster))) + 
@@ -58,11 +74,9 @@ max(modelo_dbscan$cluster)
 
 modelo_dbscan$cluster %>% unique() %>% length()
 
-estad <- data_clean %>% 
-  mutate(cluster = modelo_dbscan$cluster) %>% 
-  group_by(cluster) %>%
-  summarise(mean(User_Score),
-            mean(Critic_Score),
-            mean(Global_Sales),
-            mean(User_Count))
+
+
+clusters= as.data.frame(modelo_dbscan$cluster)
+cat("La canción",song,"pertenece al cluster",clusters[indice,1])
+
 
