@@ -99,22 +99,25 @@ lista=data.frame(Cancion=character(),Duracion_Acumulado=numeric())
 #Pd: Si la muestra tomada obtiene clusters que no logren satisfacer todo el tiempo,
 #Las canciones se comenzarán a repetir hasta cumplir las 3 horas, siendo todas ellas,
 #Del mismo cluster
-while(tiempo<=10800000){
-  for (j in 1:nrow(base)) {
-    if(cltr==base[j,4]) {
-      if (tiempo >=10800000){
-        break
+playlist <- function(data,tiempo, j, cltr, lista){
+  while(tiempo<=10800000){
+    for (j in 1:nrow(data)) {
+      if(cltr==data[j,4]) {
+        if (tiempo >=10800000){
+          break
+        }
+        tiempo=tiempo+data[j,2]
+        cancion=data[j,1]
+        vector=c(cancion,tiempo)
+        lista=rbind(lista,vector)
       }
-      tiempo=tiempo+base[j,2]
-      cancion=base[j,1]
-      vector=c(cancion,tiempo)
-      lista=rbind(lista,vector)
     }
   }
+  return(lista)
 }
-view(lista)
+playKNN<- playlist(base,tiempo,j,cltr,lista)
 
-
+view(playKNN)
 
 data_PCAproy <- data_clean %>% 
   prcomp(scale. = TRUE) %>% 
