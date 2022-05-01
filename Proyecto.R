@@ -40,8 +40,6 @@ ggplot(data_tsne, aes(V1, V2)) +
   geom_point(alpha = 0.5)
 
 
-#========================================== Manipulación De Usuario ==============================================
-
 #Le preguntamos al usuario el nombre de la canción que desea utilizar
 #Y comprobamos que efectivamente se encuentre en la muestra
 #Ejemplo: "Train" o "26j26hmfGEyzWo222T8Eqx"
@@ -104,10 +102,6 @@ dev.off()
 
 #Creamos el modelo Dbscan con el parametro escogido
 modelo_dbscan <- dbscan(data_tsne, eps = 1.7, minPts = 7)
-
-#Gráficamos Dbscan
-ggplot(data_tsne, aes(V1, V2, col = factor(modelo_dbscan$cluster))) + 
-  geom_point(alpha = 0.5) 
 
 
 #Vemos cuantos cluster tenemos
@@ -186,4 +180,34 @@ cltr_Gmm=clusters_GMM[indice,1]
 Playlist_GMM<- playlist(Base_Gmm,tiempo,j,cltr_Gmm,lista)
 view(Playlist_GMM)
 
-
+analisis <- function(datos, modelo, n){
+  clusters <- modelo$cluster
+  
+  # inspeccion visual de matriz de distancias
+  
+  # calculamos las distancias de los datos
+  distancias <- dist(datos) %>% as.matrix()
+  
+  # generamos indices con la ubicacion de los clusters ordenados
+  clusters_i <-  sort(clusters, index.return=TRUE)
+  
+  #reordeno filas y columnas en base al cluster obtenido
+  distancias <- distancias[clusters_i$ix, clusters_i$ix]
+  rownames(distancias) <- c(1:nrow(datos))
+  colnames(distancias) <- c(1:nrow(datos))
+  
+  # pero la matriz de distancias es muy grande para graficar
+  print(object.size(distancias), units = "Mb")
+  
+  # la extraemos 1 de cada 10 filas y columnas
+  ids <- (1:floor(nrow(distancias)/n))*n
+  dist_reducida <- distancias[ids,ids]
+  
+  # bajo considerablemente el tamaño
+  print(object.size(dist_reducida), units = "Mb")
+  
+  # generamos la imagen de la matriz para la inspececion visual
+  image(dist_reducida)
+}
+analisis(data_tsne, modelo_dbscan, 10)
+analisis(data2_tsne, modelo_kmeans, 10)
