@@ -41,9 +41,9 @@ ggplot(data_tsne, aes(V1, V2)) +
 
 
 #Gráficamos Knn para escoger eps, a lo cual notamos que el punto de inflexíon se aproxima en 2
-kNNdistplot(data_tsne, k = 4)
-abline(h=2, col = "red", lty = 2)
-dev.off() 
+kNNdistplot(data_tsne, k = 4) %>%
+  abline(h=2, col = "red", lty = 2)%>%
+  dev.off() 
 
 #Creamos el modelo Dbscan con el parametro escogido
 modelo_dbscan <- dbscan(data_tsne, eps = 2, minPts = 9)
@@ -128,7 +128,7 @@ data_PCAproy <- data_clean %>%
 ggplot(data_PCAproy, aes(PC1, PC2)) + 
   geom_point(alpha = 0.5)
 
-data_tsne <- data_clean %>% 
+data2_tsne <- data_clean %>% 
   unique() %>% 
   Rtsne() %>% 
   .$Y %>% 
@@ -162,4 +162,34 @@ modelo_dbscan$cluster %>% unique() %>% length()
 clusters= as.data.frame(modelo_dbscan$cluster)
 cat("La canción",song,"pertenece al cluster",clusters[indice,1])
 
-
+analisis <- function(datos, modelo, n){
+  clusters <- modelo$cluster
+  
+  # inspeccion visual de matriz de distancias
+  
+  # calculamos las distancias de los datos
+  distancias <- dist(datos) %>% as.matrix()
+  
+  # generamos indices con la ubicacion de los clusters ordenados
+  clusters_i <-  sort(clusters, index.return=TRUE)
+  
+  #reordeno filas y columnas en base al cluster obtenido
+  distancias <- distancias[clusters_i$ix, clusters_i$ix]
+  rownames(distancias) <- c(1:nrow(datos))
+  colnames(distancias) <- c(1:nrow(datos))
+  
+  # pero la matriz de distancias es muy grande para graficar
+  print(object.size(distancias), units = "Mb")
+  
+  # la extraemos 1 de cada 10 filas y columnas
+  ids <- (1:floor(nrow(distancias)/n))*n
+  dist_reducida <- distancias[ids,ids]
+  
+  # bajo considerablemente el tamaño
+  print(object.size(dist_reducida), units = "Mb")
+  
+  # generamos la imagen de la matriz para la inspececion visual
+  image(dist_reducida)
+}
+analisis(data_tsne, modelo_dbscan, 10)
+analisis(data2_tsne, modelo_kmeans, 10)
